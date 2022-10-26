@@ -1,0 +1,6 @@
+[submodule "src/nimQR/private/zbar"]
+	path = src/nimQR/private/zbar
+	url = https://github.com/mchehab/zbar.git
+[submodule "src/nimQR/private/qrcodegenerator"]
+	path = src/nimQR/private/qrcodegenerator
+	url = https://github.com/nayuki/QR-Code-generator.git
