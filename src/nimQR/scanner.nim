@@ -3,9 +3,9 @@
 import qrutils, ./private/qrcommon
 import stdnim
 
-proc scan*(gr: QRimage): StdVector[QRdetect]=
-  # expects gr is a 1ch grayscale
-  discard gr.scanQR(result)
+proc scan*(gi: ImagePlane): StdVector[QRdetect]=
+  # expects gi is a 1ch grayscale
+  discard gi.scanQR(result)
 
 proc scan*(fpath: string): StdVector[QRdetect]=
   var qri: QRimage

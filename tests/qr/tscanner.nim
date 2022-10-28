@@ -2,6 +2,7 @@
 
 import unittest
 import nimQR
+import pixie
 import stdnim
 import strformat, strutils
 
@@ -35,6 +36,40 @@ proc inQR(fpath: string, expectmsg: string): bool=
   else: echo fmt"test {fpath}:{'\n'}{typs}{'\n'}{msgs}{'\n'}{locs.toStr}"
   result = true
 
+proc outImg(fpath: string, opath: string, fontfile: string): bool=
+  var qri: QRimage
+  discard qri.load(fpath)
+  let
+    img = qri.toPixie
+    ctx = newContext(img)
+    qrd = scan(qri.toGray)
+  for it in qrd.begin..<qrd.end:
+    let
+      detect: QRdetect = it[] # assign to accessing type
+      typ = $detect.typ.cStr
+      msg = $detect.msg.cStr
+      loc = detect.loc.toSeq
+    var
+      mx = 999999'f32
+      my = 0'f32
+      p = newPath()
+    for i, pt in loc:
+      let
+        x = pt.x.float32
+        y = pt.y.float32
+      if i == 0: p.moveTo(x, y)
+      else: p.lineTo(x, y)
+      if x < mx: mx = x # as min x
+      if y > my: my = y # as max y
+    p.closePath
+    img.strokePath(p, rgba(32, 192, 240, 255))
+    ctx.font = fontfile
+    ctx.fontSize = 12
+    ctx.fillStyle = rgba(32, 128, 192, 255)
+    ctx.fillText(msg, mx - 8, my + 10) # left bottom
+  img.writeFile(opath)
+  result = true
+
 proc run() =
   suite "test QR scanner":
     let
@@ -42,6 +77,9 @@ proc run() =
       fnLong = "res/_test_zbar_nim_long_.png"
       fnBGC = "res/_test_zbar_nim_bgc_.png"
       fnMul = "res/_test_zbar_nim_mul_.png"
+      fnOut = "res/_test_zbar_nim_out_.png"
+      # fontfile = "mikaP.ttf"
+      fontfile = "c:/windows/fonts/arial.ttf"
 
     test fmt"scan QR short: {fnShort}":
       const s = "testQR"
@@ -58,8 +96,9 @@ proc run() =
       const s = "black"
       check(inQR(fnBGC, s))
 
-    test fmt"scan QR Mul: {fnMul}":
+    test fmt"scan QR Mul: {fnMul} -> {fnOut}":
       const s = ""
       check(inQR(fnMul, s))
+      check(outImg(fnMul, fnOut, fontfile))
 
 run()

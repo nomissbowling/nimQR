@@ -19,8 +19,12 @@ type
 
 type
   QRimage* = object
-    qr*: QRmap
     ch*, w*, h*: int
+    px*: seq[uint8]
+
+type
+  ImagePlane* = object
+    w*, h*: int
     px*: seq[uint8]
 
 type
@@ -63,7 +67,7 @@ proc deco*(qr: QRmap, border: int, scale: int, fgc: RGBA, bgc: RGBA=newRGBA()):
     w = n * scale
     h = w
     px = newSeq[uint8](ch * w * h)
-  result = QRimage(qr: qr, ch: ch, w: w, h: h, px: px)
+  result = QRimage(ch: ch, w: w, h: h, px: px)
   for j in 0..<n:
     if j < border or j >= qr.sz + border:
       for i in 0..<n:
@@ -98,22 +102,16 @@ proc toGray*(rgba: RGBA): uint8=
       # a: uint8 = ((rgba.a * fa) div 255).uint8
     result = r + g + b
 
-proc toGray*(qri: QRimage): QRimage=
+proc toGray*(qri: QRimage): ImagePlane=
   # expects qri is a 4ch RGBA
   assert qri.ch == 4
-  let
-    ch = 1
-    w = qri.w
-    h = qri.h
-    px = newSeq[uint8](ch * w * h)
-  result = QRimage(qr: qri.qr, ch: ch, w: w, h: h, px: px)
-  for j in 0..<h:
-    for i in 0..<w:
-      let rgba = newRGBA(qri.px[qri.ch * (w * j + i)].asBE32ptr[])
-      result.px[ch * (w * j + i)] = rgba.toGray
+  result = ImagePlane(w: qri.w, h: qri.h, px: newSeq[uint8](qri.w * qri.h))
+  for j in 0..<qri.h:
+    for i in 0..<qri.w:
+      let rgba = newRGBA(qri.px[qri.ch * (qri.w * j + i)].asBE32ptr[])
+      result.px[result.w * j + i] = rgba.toGray
 
-proc load*(qri: var QRimage, fpath: string): bool=
-  let img = readImage(fpath)
+proc toQR*(img: Image, qri: var QRimage): bool=
   qri.ch = 4 # always 4 on pixie Image
   qri.w = img.width
   qri.h = img.height
@@ -122,11 +120,16 @@ proc load*(qri: var QRimage, fpath: string): bool=
     qri.px[qri.ch * i].asBE32ptr[] = img.data[i].asBE32ptr[]
   result = true
 
-proc save*(qri: QRimage, fpath: string): bool=
+proc load*(qri: var QRimage, fpath: string): bool=
+  result = readImage(fpath).toQR(qri)
+
+proc toPixie*(qri: QRimage): Image=
   # expects qri is a 4ch RGBA
   assert qri.ch == 4
-  let img = newImage(qri.w, qri.h)
-  for i in 0..<img.data.len:
-    img.data[i].asBE32ptr[] = qri.px[qri.ch * i].asBE32ptr[]
-  img.writeFile(fpath)
+  result = newImage(qri.w, qri.h)
+  for i in 0..<result.data.len:
+    result.data[i].asBE32ptr[] = qri.px[qri.ch * i].asBE32ptr[]
+
+proc save*(qri: QRimage, fpath: string): bool=
+  qri.toPixie.writeFile(fpath)
   result = true

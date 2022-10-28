@@ -63,8 +63,7 @@ int CgenQR(char *buf, char *msg)
 typedef struct {int x; int y;} CQRPOINT;
 typedef struct {string typ; string msg; vector<CQRPOINT> loc;} CQRDETECT;
 
-int CscanQR(vector<CQRDETECT> *pvdetect,
-  int ch, int w, int h, unsigned char *px)
+int CscanQR(vector<CQRDETECT> *pvdetect, int w, int h, unsigned char *px)
 {
   zbar::Image q(w, h, "Y800", (unsigned char *)px, w * h);
   zbar::ImageScanner scanner;
@@ -95,19 +94,15 @@ int CscanQR(vector<CQRDETECT> *pvdetect,
 proc cgenQR(p: ptr char; msg: cstring): cint {.importcpp: "CgenQR(@)", nodecl.}
 # proc cgenQR(p: ptr char; msg: cstring): cint {.importcpp: "CgenQR(@)".} # OK
 
-proc cscanQR(pvdetect: pointer,
-  ch, w, h: cint; px: ptr uint8): cint
+proc cscanQR(pvdetect: pointer, w, h: cint; px: ptr uint8): cint
   {.importcpp: "CscanQR(@)", nodecl.}
-# proc cscanQR(pvdetect: pointer
-#   ch, w, h: cint; px: ptr uint8): cint
+# proc cscanQR(pvdetect: pointer, w, h: cint; px: ptr uint8): cint
 #   {.importcpp: "CscanQR(@)".} # OK
 
 proc genQR*(qr: var QRmap; msg: cstring): int=
   qr.sz = cgenQR(if qr.p.len == 0: nil else: qr.p[0].unsafeAddr, msg)
   result = qr.sz
 
-proc scanQR*(gr: QRimage; vdetect: var StdVector[QRdetect]): int=
-  # expects gr is a 1ch grayscale
-  assert gr.ch == 1
-  result = cscanQR(vdetect.addr,
-    gr.ch.cint, gr.w.cint, gr.h.cint, gr.px[0].unsafeAddr)
+proc scanQR*(gi: ImagePlane; vdetect: var StdVector[QRdetect]): int=
+  # expects gi is a 1ch grayscale
+  result = cscanQR(vdetect.addr, gi.w.cint, gi.h.cint, gi.px[0].unsafeAddr)
