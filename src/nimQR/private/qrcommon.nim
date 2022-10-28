@@ -48,14 +48,14 @@ using namespace std;
 using namespace qrcodegen;
 using SymbolIterator = zbar::Image::SymbolIterator;
 
-int CgenQR(char *buf, char *msg)
+int CgenQR(unsigned char *buf, char *msg)
 {
   QrCode qr = QrCode::encodeText(msg, QrCode::Ecc::MEDIUM);
   int sz = qr.getSize();
-  if(buf){ // buf >= char[sz * sz]
+  if(buf){ // sizeof(buf) >= sz * sz
     for(int y = 0; y < sz; ++y)
       for(int x = 0; x < sz; ++x)
-        buf[y * sz + x] = qr.getModule(x, y) ? '*' : ' ';
+        buf[y * sz + x] = qr.getModule(x, y) ? 0xff : 0x00;
   }
   return sz;
 }
@@ -91,18 +91,24 @@ int CscanQR(vector<CQRDETECT> *pvdetect, int w, int h, unsigned char *px)
 """.}
 {.pop.}
 
-proc cgenQR(p: ptr char; msg: cstring): cint {.importcpp: "CgenQR(@)", nodecl.}
-# proc cgenQR(p: ptr char; msg: cstring): cint {.importcpp: "CgenQR(@)".} # OK
+proc cgenQR(p: ptr uint8; msg: cstring): cint {.importcpp: "CgenQR(@)", nodecl.}
+# proc cgenQR(p: ptr uint8; msg: cstring): cint {.importcpp: "CgenQR(@)".} # OK
 
 proc cscanQR(pvdetect: pointer, w, h: cint; px: ptr uint8): cint
   {.importcpp: "CscanQR(@)", nodecl.}
 # proc cscanQR(pvdetect: pointer, w, h: cint; px: ptr uint8): cint
 #   {.importcpp: "CscanQR(@)".} # OK
 
-proc genQR*(qr: var QRmap; msg: cstring): int=
-  qr.sz = cgenQR(if qr.p.len == 0: nil else: qr.p[0].unsafeAddr, msg)
-  result = qr.sz
+proc genQR*(msg: cstring): ImagePlane=
+  result = newImagePlane(0, 0)
+  result.w = cgenQR(nil, msg)
+  result.h = result.w
+  when false: # cannot evaluate at compile time
+    result.px = array[result.h, array[result.w, uint8]]
+  else:
+    result.px = newSeq[uint8](result.w * result.h)
+  discard cgenQR(result.px[0].unsafeAddr, msg)
 
-proc scanQR*(gi: ImagePlane; vdetect: var StdVector[QRdetect]): int=
+proc scanQR*(gi: ImagePlane): StdVector[QRdetect]=
   # expects gi is a 1ch grayscale
-  result = cscanQR(vdetect.addr, gi.w.cint, gi.h.cint, gi.px[0].unsafeAddr)
+  discard cscanQR(result.addr, gi.w.cint, gi.h.cint, gi.px[0].unsafeAddr)

@@ -19,7 +19,7 @@ proc toSeq(loc: StdVector[QRpoint]): seq[QRpoint]=
     result.add(it[])
 
 proc inQR(fpath: string, expectmsg: string): bool=
-  let qrd = scan(fpath)
+  let qrd = fpath.scan
   var
     typs = newSeq[string](qrd.size)
     msgs = newSeq[string](qrd.size)
@@ -37,18 +37,17 @@ proc inQR(fpath: string, expectmsg: string): bool=
   result = true
 
 proc outImg(fpath: string, opath: string, fontfile: string): bool=
-  var qri: QRimage
-  discard qri.load(fpath)
   let
-    img = qri.toPixie
+    img = fpath.readImage
     ctx = newContext(img)
-    qrd = scan(qri.toGray)
+    qrd = img.toGray.scan
   for it in qrd.begin..<qrd.end:
     let
       detect: QRdetect = it[] # assign to accessing type
       typ = $detect.typ.cStr
       msg = $detect.msg.cStr
       loc = detect.loc.toSeq
+    check(typ == "QR-Code")
     var
       mx = 999999'f32
       my = 0'f32
@@ -62,10 +61,10 @@ proc outImg(fpath: string, opath: string, fontfile: string): bool=
       if x < mx: mx = x # as min x
       if y > my: my = y # as max y
     p.closePath
-    img.strokePath(p, rgba(32, 192, 240, 255))
+    img.strokePath(p, rgba(240, 32, 32, 255))
     ctx.font = fontfile
     ctx.fontSize = 12
-    ctx.fillStyle = rgba(32, 128, 192, 255)
+    ctx.fillStyle = rgba(32, 32, 240, 255)
     ctx.fillText(msg, mx - 8, my + 10) # left bottom
   img.writeFile(opath)
   result = true

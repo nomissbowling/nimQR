@@ -1,13 +1,12 @@
 # scanner.nim
 
 import qrutils, ./private/qrcommon
+import pixie
 import stdnim
 
 proc scan*(gi: ImagePlane): StdVector[QRdetect]=
   # expects gi is a 1ch grayscale
-  discard gi.scanQR(result)
+  result = gi.scanQR
 
 proc scan*(fpath: string): StdVector[QRdetect]=
-  var qri: QRimage
-  discard qri.load(fpath)
-  result = scan(qri.toGray)
+  result = fpath.readImage.toGray.scan
