@@ -1,7 +1,6 @@
 # qrutils.nim
 
-import stb_image/read as stbi
-import stb_image/write as stbiw
+import pixie
 import stdnim
 
 type
@@ -26,6 +25,9 @@ type
 
 type
   RGBA* = tuple[r, g, b, a: uint8]
+
+template asBE32ptr*(pixieu32asBEu32: ColorRGBX): ptr uint32=
+  cast[ptr uint32](pixieu32asBEu32.addr)
 
 template asBE32ptr*(tpl4u8asBEu32: RGBA): ptr uint32=
   cast[ptr uint32](tpl4u8asBEu32[0].unsafeAddr)
@@ -84,8 +86,17 @@ proc toGray*(rgba: RGBA): uint8=
   if rgba.a == 0:
     result = 0xff'u8
   else:
-    let gr = rgba.r.float * 0.299 + rgba.g.float * 0.587 + rgba.b.float * 0.114
-    result = gr.uint8
+    const
+      fr: uint16 = (0.299 * 255).uint16
+      fg: uint16 = (0.587 * 255).uint16
+      fb: uint16 = (0.114 * 255).uint16
+      # fa: uint16 = (1.000 * 255).uint16
+    let
+      r: uint8 = ((rgba.r * fr) div 255).uint8
+      g: uint8 = ((rgba.g * fg) div 255).uint8
+      b: uint8 = ((rgba.b * fb) div 255).uint8
+      # a: uint8 = ((rgba.a * fa) div 255).uint8
+    result = r + g + b
 
 proc toGray*(qri: QRimage): QRimage=
   # expects qri is a 4ch RGBA
@@ -102,9 +113,20 @@ proc toGray*(qri: QRimage): QRimage=
       result.px[ch * (w * j + i)] = rgba.toGray
 
 proc load*(qri: var QRimage, fpath: string): bool=
-  qri.px = stbi.load(fpath, qri.w, qri.h, qri.ch, stbi.Default)
+  let img = readImage(fpath)
+  qri.ch = 4 # always 4 on pixie Image
+  qri.w = img.width
+  qri.h = img.height
+  qri.px = newSeq[uint8](qri.ch * qri.w * qri.h)
+  for i in 0..<img.data.len:
+    qri.px[qri.ch * i].asBE32ptr[] = img.data[i].asBE32ptr[]
   result = true
 
 proc save*(qri: QRimage, fpath: string): bool=
-  stbiw.writePNG(fpath, qri.w, qri.h, qri.ch, qri.px)
+  # expects qri is a 4ch RGBA
+  assert qri.ch == 4
+  let img = newImage(qri.w, qri.h)
+  for i in 0..<img.data.len:
+    img.data[i].asBE32ptr[] = qri.px[qri.ch * i].asBE32ptr[]
+  img.writeFile(fpath)
   result = true

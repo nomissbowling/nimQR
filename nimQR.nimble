@@ -10,11 +10,12 @@ license       = "MIT"
 srcDir        = "src"
 skipDirs      = @["tests", "benchmarks", "htmldocs"]
 skipFiles     = @["_config.yml"]
+backend       = "cpp"
 
 # Dependencies
 
 requires "nim >= 1.0.0",
-  "stb_image",
+  "pixie >= 5.0.1",
   "stdnim >= 0.0.1"
 
 # Scripts

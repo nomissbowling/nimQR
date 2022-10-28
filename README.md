@@ -18,7 +18,7 @@ Requirements
 
 - depends on other nim packages
 
-	- stb_image-Nim (read/write PNG etc) [https://github.com/define-private-public/stb_image-Nim]( https://github.com/define-private-public/stb_image-Nim )
+	- pixie (read/write PNG etc) [https://github.com/treeform/pixie]( https://github.com/treeform/pixie )
 	- stdnim (bindings to C++ std classes for Nim) [https://github.com/nomissbowling/stdnim]( https://github.com/nomissbowling/stdnim )
 
 
