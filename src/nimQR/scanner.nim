@@ -2,6 +2,7 @@
 
 import qrutils, ./private/qrcommon
 import pixie
+import pixie/imageplanes
 import stdnim
 
 proc scan*(gi: ImagePlane): StdVector[QRdetect]=

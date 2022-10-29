@@ -3,6 +3,7 @@
 import unittest
 import nimQR
 import pixie
+import pixie/imageplanes
 import strformat, strutils
 
 proc dumps*(qr: ImagePlane): string=

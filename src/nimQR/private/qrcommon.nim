@@ -7,6 +7,7 @@
 
 import repos
 import ../qrutils
+import pixie/imageplanes
 import stdnim
 import strformat
 
@@ -100,13 +101,8 @@ proc cscanQR(pvdetect: pointer, w, h: cint; px: ptr uint8): cint
 #   {.importcpp: "CscanQR(@)".} # OK
 
 proc genQR*(msg: cstring): ImagePlane=
-  result = newImagePlane(0, 0)
-  result.w = cgenQR(nil, msg)
-  result.h = result.w
-  when false: # cannot evaluate at compile time
-    result.px = array[result.h, array[result.w, uint8]]
-  else:
-    result.px = newSeq[uint8](result.w * result.h)
+  let sz = cgenQR(nil, msg)
+  result = newImagePlane(sz, sz)
   discard cgenQR(result.px[0].unsafeAddr, msg)
 
 proc scanQR*(gi: ImagePlane): StdVector[QRdetect]=

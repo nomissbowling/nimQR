@@ -19,6 +19,7 @@ Requirements
 - depends on other nim packages
 
 	- pixie (read/write PNG etc) [https://github.com/treeform/pixie]( https://github.com/treeform/pixie )
+	- pixie/imageplanes (clone fork from https://github.com/nomissbowling/pixie.git) [https://github.com/nomissbowling/pixie/tree/ImagePlane]( https://github.com/nomissbowling/pixie/tree/ImagePlane )
 	- stdnim (bindings to C++ std classes for Nim) [https://github.com/nomissbowling/stdnim]( https://github.com/nomissbowling/stdnim )
 
 

@@ -1,6 +1,7 @@
 # generator.nim
 
-import qrutils, ./private/qrcommon
+import ./private/qrcommon
+import pixie/imageplanes
 
 proc gen*(msg: string): ImagePlane=
   result = msg.genQR
