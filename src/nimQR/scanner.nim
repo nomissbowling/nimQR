@@ -10,4 +10,4 @@ proc scan*(gi: ImagePlane): StdVector[QRdetect]=
   result = gi.scanQR
 
 proc scan*(fpath: string): StdVector[QRdetect]=
-  result = fpath.readImage.toGray.scan
+  result = fpath.readImage.toGray(toGrayCustomAW).scan

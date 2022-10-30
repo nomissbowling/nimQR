@@ -41,6 +41,7 @@ proc outImg(fpath: string, opath: string, fontfile: string): bool=
   let
     img = fpath.readImage
     ctx = newContext(img)
+    # qrd = img.toGray(toGrayCustomAW).scan # when contains alpha 0 as white
     qrd = img.toGray.scan
   for it in qrd.begin..<qrd.end:
     let
